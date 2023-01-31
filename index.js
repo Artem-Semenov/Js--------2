@@ -1,4 +1,96 @@
- "use strict";
+"use strict";
+
+class StarRating {
+  constructor(ratings) {
+    this.ratingsWrappers = ratings;
+  }
+  ratingActive;
+  ratingValue;
+
+  InitRatings() {
+    if (this.ratingsWrappers.length < 1) {
+      console.log("error! There is no rating wrappers to init star rating");
+      return;
+    }
+    for (let i = 0; i < this.ratingsWrappers.length; i++) {
+      const rating = this.ratingsWrappers[i];
+      this.initRating(rating);
+    }
+  }
+
+  initRating(rating) {
+    this.initRatingVars(rating);
+    this.setRatingActiveWidth();
+    if (rating.classList.contains("rating__set")) {
+      this.setRating(rating);
+    }
+  }
+
+  initRatingVars(rating) {
+    this.ratingActive = rating.querySelector(".rating-active");
+    this.ratingValue = rating.querySelector(".rating__value");
+  }
+
+  setRatingActiveWidth(i = this.ratingValue.innerHTML) {
+    const ratingActiveWidth = i / 0.05;
+    this.ratingActive.style.width = ratingActiveWidth + "%";
+  }
+
+  setRating(rating) {
+    const ratingItems = rating.querySelectorAll(".rating__item");
+    ratingItems.forEach((el, i) => {
+      el.addEventListener("mouseenter", () => {
+        this.initRatingVars(rating);
+        this.setRatingActiveWidth(el.value);
+      });
+      el.addEventListener("mouseleave", () => {
+        this.setRatingActiveWidth();
+      });
+      el.addEventListener("click", () => {
+        this.initRatingVars(rating);
+
+        if (rating.dataset.ajax) {
+          this.setRatingValue(el.value, rating);
+        } else {
+          this.ratingValue.innerHTML = i + 1;
+          this.setRatingActiveWidth();
+        }
+      });
+    });
+  }
+
+  async setRatingValue(value, ratingElem) {
+    if (ratingElem.classList.contains("rating_sending")) {
+      return false;
+    }
+
+    ratingElem.classList.add("rating_sending");
+    //Place your code here;
+    let response = await fetch("rating.json");
+
+    if (response.ok) {
+      const result = await response.json();
+
+      const { newRating, amount: ratingsAmount } = result;
+
+      this.ratingValue.innerHTML = (
+        (newRating * ratingsAmount + +value) /
+        (ratingsAmount + 1)
+      ).toFixed(2);
+
+      this.setRatingActiveWidth();
+
+      ratingElem.classList.remove("rating_sending");
+    } else {
+      alert("error!");
+      ratingElem.classList.remove("rating_sending");
+    }
+  }
+}
+
+let ratings = new StarRating(document.querySelectorAll(".rating"));
+ratings.InitRatings();
+
 /*
 const ratings = document.querySelectorAll(".rating");
 
@@ -85,96 +177,3 @@ function initRatings() {
   }
 }
  */
-class StarRating {
-  constructor(ratings) {
-    this.ratingsWrappers = ratings;
-  }
-  ratingActive;
-  ratingValue;
-
-  InitRatings() {
-    if (this.ratingsWrappers.length < 1) {
-      console.log("error! There is no rating wrappers to init star rating");
-      return;
-    }
-    for (let i = 0; i < this.ratingsWrappers.length; i++) {
-      const rating = this.ratingsWrappers[i];
-      this.initRating(rating);
-    }
-  }
-
-  initRating(rating) {
-    this.initRatingVars(rating);
-    this.setRatingActiveWidth();
-    if (rating.classList.contains("rating__set")) {
-      this.setRating(rating);
-    }
-  }
-
-  initRatingVars(rating) {
-    this.ratingActive = rating.querySelector(".rating-active");
-    this.ratingValue = rating.querySelector(".rating__value");
-  }
-
-  setRatingActiveWidth(i = this.ratingValue.innerHTML) {
-    const ratingActiveWidth = i / 0.05;
-    this.ratingActive.style.width = ratingActiveWidth + "%";
-  }
-
-
-  setRating(rating) {
-    const ratingItems = rating.querySelectorAll(".rating__item");
-    ratingItems.forEach((el, i) => {
-      el.addEventListener("mouseenter", () => {
-        this.initRatingVars(rating);
-        this.setRatingActiveWidth(el.value);
-      });
-      el.addEventListener("mouseleave", () => {
-        this.setRatingActiveWidth();
-      });
-      el.addEventListener("click", () => {
-        this.initRatingVars(rating);
-
-        if (rating.dataset.ajax) {
-          this.setRatingValue(el.value, rating);
-        } else {
-          this.ratingValue.innerHTML = i + 1;
-          this.setRatingActiveWidth();
-        }
-      });
-    });
-  }
-
-  async setRatingValue(value, ratingElem) {
-    if (ratingElem.classList.contains("rating_sending")) {
-      return false;
-    }
-
-    ratingElem.classList.add("rating_sending");
-    //Place here your code;
-    let response = await fetch("rating.json");
-
-    if (response.ok) {
-      const result = await response.json();
-
-      const { newRating, amount: ratingsAmount } = result;
-
-      this.ratingValue.innerHTML = (
-        (newRating * ratingsAmount + +value) /
-        (ratingsAmount + 1)
-      ).toFixed(2);
-
-      this.setRatingActiveWidth();
-
-      ratingElem.classList.remove("rating_sending");
-    } else {
-      alert("error!");
-      ratingElem.classList.remove("rating_sending");
-    }
-  }
-
-}
-
-
-let ratings = new StarRating(document.querySelectorAll(".rating"));
-ratings.InitRatings()
